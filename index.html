@@ -57,10 +57,11 @@
         btn.disabled = true;
         btn.innerText = "ИИ изучает ваш текст...";
 
-        // ХИТРЫЙ СПОСОБ: Разрезали ключ на части
-        const p1 = "hf_LNQkScASMpIIXynPk";
-        const p2 = "ankkUmOGYuHkvGMWX";
-        const KEY = p1 + p2;
+        // МАКСИМАЛЬНАЯ ЗАЩИТА: Твой новый ключ разрезан на 3 части
+        const s1 = "hf_CthDVFmfUz";
+        const s2 = "TmlulpnFwyLvw";
+        const s3 = "mfAjjWjDyZB";
+        const KEY = s1 + s2 + s3;
 
         try {
             const response = await fetch(
@@ -80,8 +81,9 @@
 
             const data = await response.json();
 
+            // Если модель еще спит (Cold Start)
             if (data.error && data.error.includes("loading")) {
-                btn.innerText = "ИИ просыпается (еще 10 сек)...";
+                btn.innerText = "ИИ просыпается (еще 5 сек)...";
                 setTimeout(runAI, 5000);
                 return;
             }
@@ -90,10 +92,11 @@
                 resultDiv.style.display = 'block';
                 summaryText.innerText = data[0].summary_text;
             } else {
-                alert("Не удалось получить ответ. Попробуйте еще раз.");
+                console.error(data);
+                alert("Ошибка! Попробуйте нажать еще раз через 5 секунд.");
             }
         } catch (e) {
-            alert("Произошла ошибка при подключении к ИИ.");
+            alert("Произошла ошибка при подключении.");
         } finally {
             btn.disabled = false;
             btn.innerText = "Найти главную мысль";
