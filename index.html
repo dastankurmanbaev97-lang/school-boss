@@ -3,81 +3,288 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TextMind AI | Local Edition</title>
+    <title>TextMind Pro | Интеллектуальный анализ</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
-        :root { --primary: #6366f1; --bg: #0f172a; --card: #1e293b; --text: #f8fafc; --accent: #38bdf8; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .container { background: var(--card); padding: 40px; border-radius: 24px; width: 100%; max-width: 600px; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
-        h1 { text-align: center; background: linear-gradient(to right, #818cf8, #38bdf8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 25px; font-size: 2.2rem; }
-        textarea { width: 100%; height: 200px; background: #0f172a; border: 2px solid #334155; border-radius: 16px; color: #fff; padding: 15px; font-size: 16px; resize: none; box-sizing: border-box; outline: none; transition: 0.3s; }
-        textarea:focus { border-color: var(--accent); }
-        button { width: 100%; padding: 16px; margin-top: 20px; background: var(--primary); border: none; border-radius: 12px; color: white; font-weight: bold; font-size: 18px; cursor: pointer; transition: 0.2s; }
-        button:hover { background: #4f46e5; transform: translateY(-2px); }
-        #result { margin-top: 25px; padding: 20px; background: rgba(56, 189, 248, 0.1); border-radius: 16px; border-left: 4px solid var(--accent); display: none; }
-        footer { margin-top: 30px; text-align: center; color: #64748b; font-size: 0.9rem; }
+        :root {
+            --primary: #818cf8;
+            --secondary: #c084fc;
+            --bg: #030712;
+            --card: #111827;
+            --text: #f3f4f6;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: radial-gradient(circle at top left, #1e1b4b, #030712);
+            color: var(--text);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(12px);
+            padding: 3rem;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            width: 100%;
+            max-width: 800px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 800;
+            background: linear-gradient(to right, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #9ca3af;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .input-group {
+            position: relative;
+        }
+
+        textarea {
+            width: 100%;
+            height: 220px;
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid #374151;
+            border-radius: 16px;
+            color: #fff;
+            padding: 20px;
+            font-size: 16px;
+            line-height: 1.6;
+            resize: none;
+            box-sizing: border-box;
+            outline: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(129, 140, 248, 0.2);
+            background: rgba(0, 0, 0, 0.4);
+        }
+
+        button {
+            width: 100%;
+            padding: 16px;
+            margin-top: 24px;
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.1);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        #loader {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        #result {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 18px;
+            border-left: 5px solid var(--secondary);
+            display: none;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-header {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--secondary);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #summaryText {
+            font-size: 1.15rem;
+            line-height: 1.8;
+            color: #e5e7eb;
+        }
+
+        .tag-container {
+            margin-top: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .tag {
+            background: rgba(129, 140, 248, 0.15);
+            color: var(--primary);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(129, 140, 248, 0.3);
+        }
+
+        footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .contact-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: #9ca3af;
+            text-decoration: none;
+            margin: 0 15px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+
+        .contact-link:hover {
+            color: var(--accent);
+        }
+
+        .contact-link i {
+            color: var(--primary);
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h1>TextMind AI</h1>
-    <p style="text-align:center; color:#94a3b8; margin-bottom:20px;">Локальный анализ текста (без API ключей)</p>
-
-    <textarea id="inputText" placeholder="Вставьте текст (например, школьный доклад или статью)..."></textarea>
-    <button onclick="analyzeText()">Найти главную мысль</button>
+    <h1>TextMind Pro</h1>
+    <p class="subtitle">Искусственный интеллект для глубокого анализа сути</p>
+    
+    <div class="input-group">
+        <textarea id="inputText" placeholder="Вставьте ваш текст или статью здесь..."></textarea>
+    </div>
+    
+    <button onclick="analyzeText()">
+        <span id="btnText">Проанализировать текст</span>
+        <div id="loader"></div>
+    </button>
 
     <div id="result">
-        <b style="color:var(--accent); text-transform: uppercase; font-size: 0.8rem;">Краткое содержание:</b>
-        <p id="summaryText" style="line-height: 1.6; margin-top: 10px;"></p>
+        <div class="result-header">
+            <i class="fas fa-brain"></i> Глубокий анализ сути
+        </div>
+        <p id="summaryText"></p>
+        <div class="tag-container" id="keywordsList"></div>
     </div>
 
     <footer>
-        <p>Разработчик: <b>Дастан Курманбаев</b></p>
+        <p style="color: #6b7280; margin-bottom: 15px;">Связаться с разработчиком:</p>
+        <a href="tel:0555191870" class="contact-link">
+            <i class="fas fa-phone"></i> 0555191870
+        </a>
+        <a href="mailto:dastankurmanbaev2@gmail.com" class="contact-link">
+            <i class="fas fa-envelope"></i> dastankurmanbaev2@gmail.com
+        </a>
     </footer>
 </div>
 
 <script>
     function analyzeText() {
-        const text = document.getElementById('inputText').value.trim();
+        const text = document.getElementById('inputText').value;
+        const btnText = document.getElementById('btnText');
+        const loader = document.getElementById('loader');
         const resultDiv = document.getElementById('result');
-        const summaryText = document.getElementById('summaryText');
 
         if (text.length < 50) {
-            alert("Текст слишком короткий для анализа!");
+            alert("Пожалуйста, введите более объемный текст для качественного анализа.");
             return;
         }
 
-        // 1. Разбиваем текст на предложения
-        const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
-        
-        if (sentences.length <= 2) {
-            summaryText.innerText = text;
-        } else {
-            // 2. Считаем частоту слов (упрощенно)
-            const words = text.toLowerCase().match(/[а-яёa-z]+/g) || [];
-            const freq = {};
+        // Анимация загрузки
+        btnText.style.display = 'none';
+        loader.style.display = 'block';
+        resultDiv.style.display = 'none';
+
+        setTimeout(() => {
+            const sentences = text.match(/[^\.!\?]+[\.!\?]+/g) || [text];
+            const words = text.toLowerCase().match(/[а-яА-Яa-zA-Z]+/g);
+            
+            // Расширенный список стоп-слов
+            const stopWords = ['это', 'того', 'всего', 'было', 'меня', 'есть', 'если', 'когда', 'очень', 'просто'];
+            const wordFreq = {};
+
             words.forEach(word => {
-                if (word.length > 3) freq[word] = (freq[word] || 0) + 1;
+                if (word.length > 3 && !stopWords.includes(word)) {
+                    wordFreq[word] = (wordFreq[word] || 0) + 1;
+                }
             });
 
-            // 3. Оцениваем каждое предложение по важности слов
-            const scoredSentences = sentences.map(s => {
+            // Сортировка ключевых слов
+            const sortedWords = Object.keys(wordFreq).sort((a, b) => wordFreq[b] - wordFreq[a]);
+            const keywords = sortedWords.slice(0, 6);
+
+            // Оценка предложений (ищем топ-3 самых важных)
+            let scoredSentences = sentences.map(s => {
                 let score = 0;
-                const sWords = s.toLowerCase().match(/[а-яёa-z]+/g) || [];
-                sWords.forEach(w => { if (freq[w]) score += freq[w]; });
+                keywords.forEach(word => {
+                    if (s.toLowerCase().includes(word)) score += wordFreq[word];
+                });
                 return { text: s.trim(), score: score };
             });
 
-            // 4. Выбираем 2 самых важных предложения
+            // Сортируем и берем лучшие
             scoredSentences.sort((a, b) => b.score - a.score);
-            const bestSentences = scoredSentences.slice(0, 2)
-                .sort((a, b) => sentences.indexOf(a.text) - sentences.indexOf(b.text));
+            const summary = scoredSentences.slice(0, 3).map(s => s.text).join(' ');
 
-            summaryText.innerText = bestSentences.map(s => s.text).join(' ');
-        }
-
-        resultDiv.style.display = 'block';
+            // Вывод
+            loader.style.display = 'none';
+            btnText.style.display = 'block';
+            resultDiv.style.display = 'block';
+            
+            document.getElementById('summaryText').innerText = summary;
+            
+            const tagsHtml = keywords.map(k => `<span class="tag">#${k}</span>`).join('');
+            document.getElementById('keywordsList').innerHTML = tagsHtml;
+            
+        }, 800); // Небольшая задержка для эффекта "раздумий"
     }
 </script>
 
