@@ -97,6 +97,15 @@
 
         .loader { display: none; text-align: center; margin: 15px; color: var(--secondary); font-weight: bold; }
         
+        .progress-bar {
+            width: 0%;
+            height: 4px;
+            background: var(--secondary);
+            margin-top: 10px;
+            border-radius: 2px;
+            transition: width 0.3s;
+        }
+
         footer { 
             margin-top: 30px; 
             text-align: center; 
@@ -113,22 +122,23 @@
 
 <div class="container">
     <h1>StoryMind AI</h1>
-    <p class="subtitle">Интеллектуальный анализ текста</p>
+    <p class="subtitle">Интеллектуальный локальный анализ текста</p>
     
-    <textarea id="inputText" placeholder="Вставьте сюда ваш рассказ..."></textarea>
+    <textarea id="inputText" placeholder="Вставьте сюда ваш текст (минимум 50 символов)..."></textarea>
     
     <button id="submitBtn" class="btn-analyze" onclick="handleAnalysis()">
-        <span>Проанализировать</span>
+        <span>Запустить нейросеть</span>
         <i class="fas fa-bolt"></i>
     </button>
     
     <div id="loader" class="loader">
         <i class="fas fa-brain fa-spin"></i> 
-        <span id="loaderText">Нейросеть изучает сюжет...</span>
+        <span id="loaderText">Подготовка...</span>
+        <div id="progress" class="progress-bar"></div>
     </div>
 
     <div id="result">
-        <strong style="color: var(--secondary); font-size: 0.8rem; letter-spacing: 1px;">ИТОГ:</strong>
+        <strong style="color: var(--secondary); font-size: 0.8rem; letter-spacing: 1px;">ГЛАВНАЯ МЫСЛЬ:</strong>
         <p id="outputText" style="line-height: 1.7; margin-top: 10px; color: #e2e8f0;"></p>
     </div>
 
@@ -141,71 +151,67 @@
     </footer>
 </div>
 
-<script>
-    // Конфигурация (Вынесено для удобства)
-    const CONFIG = {
-        API_URL: "https://api-inference.huggingface.co/models/facebook/bart-large-cnn",
-        // ВАЖНО: Настоятельно рекомендую использовать серверную прослойку для токена.
-        // Для демонстрации в портфолио пока оставим ваш метод.
-        TOKEN: "hf_tBKfMYWGWYBIyEoUzY" + "kzbMPLQoNPTcrwer" 
-    };
+<script type="module">
+    import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+    
+    // Настройка для работы в браузере
+    env.allowLocalModels = false;
+    
+    let summarizer = null;
 
-    async function queryModel(payload) {
-        const response = await fetch(CONFIG.API_URL, {
-            headers: { 
-                "Authorization": `Bearer ${CONFIG.TOKEN}`,
-                "Content-Type": "application/json" 
-            },
-            method: "POST",
-            body: JSON.stringify(payload),
-        });
-
-        const result = await response.json();
-        
-        // Обработка состояния, когда модель загружается на сервере HF
-        if (response.status === 503 || result.estimated_time) {
-            return { error: 'loading', time: result.estimated_time || 20 };
-        }
-
-        if (!response.ok) throw new Error(result.error || "Ошибка API");
-
-        return result;
-    }
-
-    async function handleAnalysis() {
+    window.handleAnalysis = async function() {
         const inputEl = document.getElementById('inputText');
         const btnEl = document.getElementById('submitBtn');
         const loader = document.getElementById('loader');
         const resultDiv = document.getElementById('result');
         const outputText = document.getElementById('outputText');
+        const loaderText = document.getElementById('loaderText');
+        const progress = document.getElementById('progress');
 
         const text = inputEl.value.trim();
 
         if (text.length < 50) {
-            return alert("Текст слишком короткий для анализа. Введите хотя бы пару предложений.");
+            alert("Пожалуйста, введите текст подлиннее для корректного анализа.");
+            return;
         }
 
-        // Состояние загрузки
         btnEl.disabled = true;
         loader.style.display = "block";
         resultDiv.style.display = "none";
 
         try {
-            const data = await queryModel({ "inputs": text });
-
-            if (data.error === 'loading') {
-                outputText.innerText = `Модель просыпается... Попробуйте через ${Math.round(data.time)} сек.`;
-                resultDiv.style.display = "block";
-            } else if (data[0] && data[0].summary_text) {
-                outputText.innerText = data[0].summary_text;
-                resultDiv.style.display = "block";
+            if (!summarizer) {
+                loaderText.innerText = "Загрузка модели ИИ (только первый раз)...";
+                
+                // Используем Xenova/distilbart-cnn-6-6 — она отлично подходит для суммаризации
+                summarizer = await pipeline('summarization', 'Xenova/distilbart-cnn-6-6', {
+                    progress_callback: (data) => {
+                        if (data.status === 'progress') {
+                            progress.style.width = `${data.progress}%`;
+                        }
+                    }
+                });
             }
+
+            loaderText.innerText = "Нейросеть извлекает главное...";
+            progress.style.width = "100%";
+
+            const output = await summarizer(text, {
+                max_new_tokens: 100,
+                chunk_length: 512,
+                iteration: 1
+            });
+
+            outputText.innerText = output[0].summary_text;
+            resultDiv.style.display = "block";
+
         } catch (error) {
             console.error(error);
-            alert("Произошла ошибка при связи с ИИ. Проверьте консоль.");
+            alert("Произошла ошибка при запуске модели. Попробуйте обновить страницу.");
         } finally {
             loader.style.display = "none";
             btnEl.disabled = false;
+            progress.style.width = "0%";
         }
     }
 </script>
